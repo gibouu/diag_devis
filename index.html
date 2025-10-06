@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Diagnostics Price Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <h1>Diagnostics Price Calculator</h1>
+  <p class="muted small">Baseline prices are for 0–100 m². For area > 100 m², individual prices scale by (area / 100).</p>
+
+  <div class="stack" id="flowRoot">
+    <div class="card" id="stepArea">
+      <h2>Step 1 · Surface area</h2>
+      <div class="row" style="justify-content: space-between;">
+        <fieldset>
+          <legend>Service type</legend>
+          <label><input type="radio" name="jobType" value="normal" checked /> Normal</label>
+          <label style="margin-left:16px;"><input type="radio" name="jobType" value="parking" /> Parking only</label>
+          <label style="margin-left:16px;"><input type="radio" name="jobType" value="cave" /> Cave only</label>
+        </fieldset>
+        <label>Surface area (m²)
+          <input type="number" id="area" min="1" step="1" value="60" />
+        </label>
+        <div class="row" style="align-items:center; gap:8px;">
+          <span class="muted small">Derived pack</span>
+          <span class="pill" id="derivedPack">F3</span>
+        </div>
+        <button class="btn" id="nextToType">Next</button>
+      </div>
+    </div>
+
+    <div class="card" id="stepType" style="display:none;">
+      <h2>Step 2 · Property type</h2>
+      <div class="row" style="gap:16px; align-items:center;">
+        <label><input type="radio" name="propType" value="apartment" checked /> Apartment</label>
+        <label><input type="radio" name="propType" value="house" /> House / Pavilion</label>
+        <label><input type="checkbox" id="opt_studette" /> Studette</label>
+        <button class="btn" id="nextToPurpose">Next</button>
+      </div>
+        </div>
+
+    <div class="card" id="stepPurpose" style="display:none;">
+      <h2>Step 3 · Purpose</h2>
+      <div class="row" style="gap:16px; align-items:center;">
+        <label><input type="radio" name="purpose" value="rent" checked /> Renting</label>
+        <label><input type="radio" name="purpose" value="sale" /> Sale</label>
+        <label><input type="checkbox" id="opt_agent" /> Agent brings commission (ERP free)</label>
+        <button class="btn" id="nextToDiags">Next</button>
+      </div>
+    </div>
+
+    <div class="card" id="stepDiags" style="display:none;">
+      <h2>Step 4 · Diagnostics</h2>
+      <p class="muted small">Click to select. TERMITES is only for sale.</p>
+      <div id="diagnosticsList" class="row" style="flex-wrap:wrap; gap:8px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content: space-between; align-items: center;">
+        <h2 style="margin:0;">Result</h2>
+        <button id="calc" class="btn">Calculate</button>
+      </div>
+      <div id="result"></div>
+    </div>
+    <div class="card" id="stepInvoice" style="display:none;">
+      <h2>Step 5 · Invoice details</h2>
+      <div class="stack">
+        <div class="row">
+          <label>First name
+            <input type="text" id="inv_first" class="w-120" />
+          </label>
+          <label>Last name
+            <input type="text" id="inv_last" class="w-120" />
+          </label>
+        </div>
+        <fieldset>
+          <legend>Civility / Company</legend>
+          <div class="row" style="gap:16px; align-items:center;">
+            <label><input type="radio" name="inv_civ" value="M." checked /> M.</label>
+            <label><input type="radio" name="inv_civ" value="Mme" /> Mme</label>
+            <label><input type="radio" name="inv_civ" value="company" /> Société</label>
+            <label class="flex-1">Company name
+              <input type="text" id="inv_company" class="w-100" placeholder="Raison sociale (si Société)" />
+            </label>
+          </div>
+        </fieldset>
+        <div class="row" style="align-items:flex-end;">
+          <label class="flex-1 dropdown">Search address (auto-fill)
+            <input type="text" id="inv_search" class="w-100" placeholder="e.g., 10 Rue de Rivoli, Paris" autocomplete="off" />
+            <div id="addr_suggestions" class="dropdown-menu" style="display:none;"></div>
+          </label>
+          <span id="addr_status" class="small muted" style="margin-left:8px;"></span>
+        </div>
+        <label class="w-100">Street number
+          <input type="text" id="inv_num" class="w-100" />
+        </label>
+        <label class="w-100">Street name
+          <input type="text" id="inv_street" class="w-100" />
+        </label>
+        <label class="w-100">Postal code
+          <input type="text" id="inv_postal" class="w-100" />
+        </label>
+        <label class="w-100">City
+          <input type="text" id="inv_city" class="w-100" />
+        </label>
+        <label class="w-100">Désignation des diagnostics (B21)
+          <textarea id="inv_designation" class="w-100" rows="2">1 Pack Amiante, Loi Carrez, Plomb, DPE, Electricité, Gaz, Termite et ERP avec Nuisances Sonores Aériennes</textarea>
+        </label>
+        <label class="w-100">Description du bien (B25)
+          <textarea id="inv_description" class="w-100" rows="2">Appartement F3/F4</textarea>
+        </label>
+        <label class="w-100">Type de bien (A21)
+          <select id="inv_type_bien" class="w-100">
+            <option value="APPARTEMENT">APPARTEMENT</option>
+            <option value="MAISON">MAISON</option>
+            <option value="CAVE">CAVE</option>
+            <option value="STUDETTE">STUDETTE</option>
+            <option value="PARKING">PARKING</option>
+          </select>
+        </label>
+        <div class="row" style="justify-content: space-between; align-items:center;">
+          <label><input type="checkbox" id="agree_terms" checked/> I agree with the price and wish to receive an invoice</label>
+          <div class="row" style="align-items:center; gap:8px;">
+            <span id="inv_status" class="small muted"></span>
+            <button id="continueInvoice" class="btn">Agree & Continue</button>
+          </div>
+        </div>
+        <p id="inv_error" class="error-text" style="display:none;">Please fill all fields and agree to proceed.</p>
+      </div>
+    </div>
+  </div>
+  <script defer src="./assets/app.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  
+</body>
+</html>
