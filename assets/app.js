@@ -133,26 +133,26 @@
   };
 
   function renderDiagnosticsList() {
-    const list = document.getElementById('diagnosticsList');
-    if (!list) return;
-    list.innerHTML = '';
-    const purpose = [...document.querySelectorAll('input[name="purpose"]')].find(r => r.checked)?.value || 'rent';
-    state.diagnostics.forEach(diag => {
-      const disabled = (diag.id === 'TERMITES' && purpose === 'rent');
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      const isSelected = (state.selectedDiagIds || []).includes(diag.id);
-      chip.className = isSelected ? 'btn' : 'btn secondary';
-      chip.dataset.diagId = diag.id;
-      chip.textContent = diag.name + (disabled ? ' (sale only)' : '');
-      chip.disabled = disabled;
-      chip.addEventListener('click', () => {
-        toggleSelectedDiagnostic(diag.id);
-      renderDiagnosticsList();
-      });
-      list.appendChild(chip);
-    });
-  }
+     const list = document.getElementById('diagnosticsList');
+     if (!list) return;
+     list.innerHTML = '';
+     const purpose = [...document.querySelectorAll('input[name="purpose"]')].find(r => r.checked)?.value || 'rent';
+     state.diagnostics.forEach(diag => {
+       const disabled = (diag.id === 'TERMITES' && purpose === 'rent');
+       const chip = document.createElement('button');
+       chip.type = 'button';
+       const isSelected = (state.selectedDiagIds || []).includes(diag.id);
+       chip.className = isSelected ? 'btn' : 'btn secondary';
+       chip.dataset.diagId = diag.id;
+       chip.textContent = diag.name + (disabled ? ' (sale only)' : '');
+       chip.disabled = disabled;
+       chip.addEventListener('click', () => {
+         toggleSelectedDiagnostic(diag.id);
+        renderDiagnosticsList();
+       });
+       list.appendChild(chip);
+     });
+   }
 
   function toggleSelectedDiagnostic(id) {
     const set = new Set(state.selectedDiagIds || []);
@@ -201,7 +201,7 @@
         const erpBase = Number(state.prices?.['ERP']?.[pack]?.[purpose] ?? 40);
         const erpPrice = optAgent ? 0 : erpBase;
         total += erpPrice;
-        lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aériennes', pack, purpose, base: erpBase, factor: 1, price: erpPrice });
+        lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Diagnostic or justres Aériennes', pack, purpose, base: erpBase, factor: 1, price: erpPrice });
       }
       return { area, pack, purpose, factor: 1, lines, total: roundCurrency(total), packSummary, erpSelected };
     }
@@ -260,7 +260,7 @@
       const erpBase = Number(state.prices?.['ERP']?.[pricePack]?.[purpose] ?? 40);
       const erpPrice = optAgent ? 0 : roundCurrency(erpBase * (area <= 100 ? 1 : factor));
       addonsSubtotal += erpPrice;
-      lines.push({ name: optAgent ? 'ERP (agent - free)' : 'EERP avec Nuisances Sonores Aériennes', pack, purpose, base: erpBase, factor: (area <= 100 ? 1 : factor), price: erpPrice });
+      lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aériennes', pack, purpose, base: erpBase, factor: (area <= 100 ? 1 : factor), price: erpPrice });
     }
 
     const total = roundCurrency(diagnosticsSubtotal + addonsSubtotal);
@@ -274,23 +274,25 @@
   }
 
   function renderResult() {
-    const out = document.getElementById('result');
+    const out = q('result');
     const { area, pack, purpose, factor, lines, total, packSummary } = calculateTotal();
 
     if ((packSummary?.count || 0) === 0 && lines.length === 0) {
-      out.innerHTML = `<p class="muted">Select at least one diagnostic.</p>`;
+      if (out) out.innerHTML = `<p class="muted">Select at least one diagnostic.</p>`;
       return;
     }
 
     const purposeLabel = purpose === 'rent' ? 'Renting' : 'Sale';
 
     const items = [];
-    if (packSummary && packSummary.count > 0) {
+    // Only display the pack summary row when it's an actual bundle (bundle === true)
+    if (packSummary && packSummary.bundle) {
       items.push({ label: `${packSummary.names.join(', ')} · Pack ${packSummary.count} diagnostics`, price: packSummary.price.toFixed(2) });
       if (packSummary.factor > 1) {
         items.push({ label: `Factor × ${packSummary.factor.toFixed(2)}`, price: '' });
       }
     }
+    // add explicit priced lines (non-zero price). For bundles, placeholder lines have price 0 and are skipped.
     lines.forEach(l => {
       if (l.name && l.price > 0) items.push({ label: l.name, price: l.price.toFixed(2) });
     });
@@ -303,12 +305,11 @@
     });
     html += `</tbody><tfoot><tr><th class="right total">Total</th><th class="right total">${total.toFixed(2)}</th></tr></tfoot></table>`;
 
-    out.innerHTML = html;
-    const inv = document.getElementById('stepInvoice');
-    if (inv) inv.style.display = '';
+    if (out) out.innerHTML = html;
   }
 
   function validateInvoice() {
+    // defensive reads
     const civ = [...document.querySelectorAll('input[name="inv_civ"]')].find(x => x.checked)?.value || 'M.';
     const company = getVal('inv_company');
     const first = getVal('inv_first');
@@ -322,11 +323,32 @@
     const description = getVal('inv_description');
     const typeBien = getVal('inv_type_bien');
     const agree = getChecked('agree_terms');
+
     let hasName;
     if (civ === 'company') hasName = company.length > 0;
     else if (civ === 'both' || civ === 'M_MME') hasName = last.length > 0;
     else hasName = allowNoFirst ? (last.length > 0) : (first.length > 0 && last.length > 0);
-    const ok = hasName && num && street && postal && city && designation && description && typeBien && agree;
+
+    const required = [
+      { id: (civ === 'company') ? 'inv_company' : 'inv_last', ok: civ === 'company' ? company.length > 0 : last.length > 0 },
+      { id: 'inv_num', ok: !!num },
+      { id: 'inv_street', ok: !!street },
+      { id: 'inv_postal', ok: !!postal },
+      { id: 'inv_city', ok: !!city },
+      { id: 'inv_designation', ok: !!designation },
+      { id: 'inv_description', ok: !!description },
+      { id: 'inv_type_bien', ok: !!typeBien },
+      { id: 'agree_terms', ok: agree }
+    ];
+
+    // clear prior error highlights
+    required.forEach(r => { const el = q(r.id); if (el) el.classList.remove('error'); });
+
+    // mark missing required fields
+    const missing = required.filter(r => !r.ok);
+    missing.forEach(r => { const el = q(r.id); if (el) el.classList.add('error'); });
+
+    const ok = hasName && missing.length === 0;
     const btn = q('continueInvoice'); if (btn) btn.disabled = !ok;
     const invErr = q('inv_error'); if (invErr) invErr.style.display = ok ? 'none' : '';
     return ok;
@@ -339,25 +361,69 @@
     let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
   }
 
-  document.getElementById('calc').addEventListener('click', () => {
-    const jobType = [...document.querySelectorAll('input[name="jobType"]')].find(r => r.checked)?.value || 'normal';
-    const areaEl = document.getElementById('area');
-    const areaVal = Math.max(0, Number(areaEl.value || 0));
-    let hasError = false;
-    areaEl.classList.remove('error');
-    const diagListEl = document.getElementById('diagnosticsList');
-    if (diagListEl) diagListEl.classList.remove('error');
-    if (jobType === 'normal' && areaVal <= 0) { areaEl.classList.add('error'); hasError = true; }
-    if (jobType === 'normal') {
-      const selectedIds = new Set(state.selectedDiagIds || []);
-      if (selectedIds.size === 0) { if (diagListEl) diagListEl.classList.add('error'); hasError = true; }
+  // safe calculate button handling and hide/show behavior
+  (function initCalcVisibility(){
+    const calcBtn = q('calc');
+    // hide on load
+    if (calcBtn) calcBtn.style.display = 'none';
+
+    function handleCalc() {
+      const jobType = [...document.querySelectorAll('input[name="jobType"]')].find(r => r.checked)?.value || 'normal';
+      const areaEl = q('area');
+      const areaVal = Math.max(0, Number(getVal('area') || 0));
+      let hasError = false;
+      if (areaEl) areaEl.classList.remove('error');
+      const diagListEl = q('diagnosticsList');
+      if (diagListEl) diagListEl.classList.remove('error');
+      if (jobType === 'normal' && areaVal <= 0) { if (areaEl) areaEl.classList.add('error'); hasError = true; }
+      if (jobType === 'normal') {
+        const selectedIds = new Set(state.selectedDiagIds || []);
+        if (selectedIds.size === 0) { if (diagListEl) diagListEl.classList.add('error'); hasError = true; }
+      }
+      if (hasError) {
+        const out = q('result');
+        if (out) out.innerHTML = `<p class="error-text">Please fill in the highlighted fields.</p>`;
+        return;
+      }
+      renderResult();
+      // show invoice step only after successful calculation
+      const inv = q('stepInvoice');
+      if (inv) inv.style.display = '';
     }
-    if (hasError) {
-      document.getElementById('result').innerHTML = `<p class="error-text">Please fill in the highlighted fields.</p>`;
-      return;
+
+    // attach safe click handler
+    safeOn('calc', 'click', handleCalc);
+
+    // when user reaches diagnostics step show calc and keep "nextToInvoice" available
+    function showCalcAndKeepInvoiceNext() {
+      const c = q('calc'); if (c) c.style.display = '';
+      // hide earlier next buttons that navigated here
+      ['nextToType','nextToPurpose','nextToDiags'].forEach(id => { const el = q(id); if (el) el.style.display = 'none'; });
+      // ensure the button to go to invoice (step 4) is visible so user can continue
+      const nextInv = q('nextToInvoice'); if (nextInv) nextInv.style.display = '';
     }
-    renderResult();
-  });
+    safeOn('nextToDiags', 'click', () => {
+      // show diagnostics step first
+      const stepDiags = q('stepDiags');
+      if (stepDiags) stepDiags.style.display = '';
+      // hide the next button that was clicked
+      const btn = q('nextToDiags'); if (btn) btn.style.display = 'none';
+      // render list and show calc / keep next-to-invoice available
+      if (typeof renderDiagnosticsList === 'function') renderDiagnosticsList();
+      showCalcAndKeepInvoiceNext();
+      // fallback: if there is no "nextToInvoice" control, show invoice step immediately
+      const nextInv = q('nextToInvoice');
+      if (!nextInv) {
+        const stepInv = q('stepInvoice'); if (stepInv) stepInv.style.display = '';
+      }
+    });
+
+    // ensure next-to-invoice actually shows stepInvoice when clicked
+    safeOn('nextToInvoice', 'click', () => {
+      const btn = q('nextToInvoice'); if (btn) btn.style.display = 'none';
+      const step = q('stepInvoice'); if (step) step.style.display = '';
+    });
+  })();
 
   document.querySelectorAll('input[name="purpose"]').forEach(r => {
     r.addEventListener('change', () => {
@@ -377,21 +443,10 @@
     });
   });
 
-  // use safe helpers (q / safeOn) so missing elements don't throw
-  safeOn('nextToType', 'click', () => {
-    const btn = q('nextToType'); if (btn) btn.style.display = 'none';
-    const step = q('stepType'); if (step) step.style.display = '';
-  });
-  safeOn('nextToPurpose', 'click', () => {
-    const btn = q('nextToPurpose'); if (btn) btn.style.display = 'none';
-    const step = q('stepPurpose'); if (step) step.style.display = '';
-  });
-  safeOn('nextToDiags', 'click', () => {
-    const btn = q('nextToDiags'); if (btn) btn.style.display = 'none';
-    const step = q('stepDiags'); if (step) step.style.display = '';
-    // render diagnostics once visible
-    if (typeof renderDiagnosticsList === 'function') renderDiagnosticsList();
-  });
+  // use safe helpers (q / safeOn) so missing elements don't throw and hide each next button when used
+  safeOn('nextToType', 'click', () => { const btn = q('nextToType'); if (btn) btn.style.display = 'none'; const step = q('stepType'); if (step) step.style.display = ''; });
+  safeOn('nextToPurpose', 'click', () => { const btn = q('nextToPurpose'); if (btn) btn.style.display = 'none'; const step = q('stepPurpose'); if (step) step.style.display = ''; });
+  // nextToDiags handled above in initCalcVisibility to also show calc
   document.querySelectorAll('input[name="propType"]').forEach(r => {
     r.addEventListener('change', () => {
       const checked = document.querySelector('input[name="propType"]:checked');
