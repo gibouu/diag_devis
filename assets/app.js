@@ -192,26 +192,31 @@
 
     // special job types keep original behavior; ERP only added if selected
     if (jobType === 'parking') {
-      const lines = [{ name: 'Parking (Amiante + Termites)', pack, purpose, base: 170, factor: 1, price: 170 }];
-      let total = 170;
+      // represent the bundle via packSummary only; do not push a duplicate priced line
+      const base = 170;
+      let total = base;
+      const packSummary = { names: ['AMIANTE','TERMITES'], count: 2, price: base, factor: 1, bundle: true };
+      const lines = [];
       if (erpSelected) {
         const erpBase = Number(state.prices?.['ERP']?.[pack]?.[purpose] ?? 40);
         const erpPrice = optAgent ? 0 : erpBase;
         total += erpPrice;
-        lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP (incl. sonorisation, solarisation)', pack, purpose, base: erpBase, factor: 1, price: erpPrice });
+        lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aériennes', pack, purpose, base: erpBase, factor: 1, price: erpPrice });
       }
-      return { area, pack, purpose, factor: 1, lines, total: roundCurrency(total), packSummary: { names: ['AMIANTE','TERMITES'], count: 2, price: 170, factor: 1, bundle: true }, erpSelected };
+      return { area, pack, purpose, factor: 1, lines, total: roundCurrency(total), packSummary, erpSelected };
     }
     if (jobType === 'cave') {
       const base = 170;
-      const lines = [{ name: 'Cave only', pack, purpose: 'sale', base, factor: 1, price: base }];
+      let total = base;
+      const packSummary = { names: ['CAVE'], count: 1, price: base, factor: 1, bundle: true };
+      const lines = [];
       if (erpSelected) {
         const erpBase = Number(state.prices?.['ERP']?.[pack]?.[purpose] ?? 40);
         const erpPrice = optAgent ? 0 : erpBase;
-        lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP (incl. sonorisation, solarisation)', pack, purpose: 'sale', base: erpBase, factor: 1, price: erpPrice });
-        return { area, pack, purpose: 'sale', factor: 1, lines, total: roundCurrency(base + erpPrice), packSummary: { names: ['CAVE'], count: 1, price: base, factor: 1, bundle: false }, erpSelected };
+        total += erpPrice;
+        lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aériennes', pack, purpose: 'sale', base: erpBase, factor: 1, price: erpPrice });
       }
-      return { area, pack, purpose: 'sale', factor: 1, lines, total: roundCurrency(base), packSummary: { names: ['CAVE'], count: 1, price: base, factor: 1, bundle: false }, erpSelected };
+      return { area, pack, purpose: 'sale', factor: 1, lines, total: roundCurrency(total), packSummary, erpSelected };
     }
 
     let lines = [];
@@ -255,7 +260,7 @@
       const erpBase = Number(state.prices?.['ERP']?.[pricePack]?.[purpose] ?? 40);
       const erpPrice = optAgent ? 0 : roundCurrency(erpBase * (area <= 100 ? 1 : factor));
       addonsSubtotal += erpPrice;
-      lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP (incl. sonorisation, solarisation)', pack, purpose, base: erpBase, factor: (area <= 100 ? 1 : factor), price: erpPrice });
+      lines.push({ name: optAgent ? 'ERP (agent - free)' : 'EERP avec Nuisances Sonores Aériennes', pack, purpose, base: erpBase, factor: (area <= 100 ? 1 : factor), price: erpPrice });
     }
 
     const total = roundCurrency(diagnosticsSubtotal + addonsSubtotal);
@@ -372,15 +377,20 @@
     });
   });
 
-  document.getElementById('nextToType').addEventListener('click', () => {
-    document.getElementById('stepType').style.display = '';
+  // use safe helpers (q / safeOn) so missing elements don't throw
+  safeOn('nextToType', 'click', () => {
+    const btn = q('nextToType'); if (btn) btn.style.display = 'none';
+    const step = q('stepType'); if (step) step.style.display = '';
   });
-  document.getElementById('nextToPurpose').addEventListener('click', () => {
-    document.getElementById('stepPurpose').style.display = '';
+  safeOn('nextToPurpose', 'click', () => {
+    const btn = q('nextToPurpose'); if (btn) btn.style.display = 'none';
+    const step = q('stepPurpose'); if (step) step.style.display = '';
   });
-  document.getElementById('nextToDiags').addEventListener('click', () => {
-    document.getElementById('stepDiags').style.display = '';
-    renderDiagnosticsList();
+  safeOn('nextToDiags', 'click', () => {
+    const btn = q('nextToDiags'); if (btn) btn.style.display = 'none';
+    const step = q('stepDiags'); if (step) step.style.display = '';
+    // render diagnostics once visible
+    if (typeof renderDiagnosticsList === 'function') renderDiagnosticsList();
   });
   document.querySelectorAll('input[name="propType"]').forEach(r => {
     r.addEventListener('change', () => {
@@ -580,7 +590,7 @@
       // Build a clear short sentence starting with '1 pack' using non-ERP diagnostics
       const nonERPNames = packSummary?.names || [];
       const packPart = (packSummary?.count > 0) ? `1 Pack ${nonERPNames.join(', ')}` : '';
-      const erpPart = erpSelected ? 'ERP (incl. sonorisation, solarisation)' : '';
+      const erpPart = erpSelected ? 'ERP avec Nuisances Sonores Aériennes' : '';
       const longSentence = [packPart, erpPart].filter(Boolean).join(' · ');
 
       status.textContent = 'Filling cells…';
@@ -682,7 +692,7 @@
       // Build designation: pack part (non-ERP diagnostics) + ERP part if selected
       const nonERPNames = Array.isArray(packSummary.names) ? packSummary.names : [];
       const packPart = (packSummary.count > 0) ? `1 Pack ${nonERPNames.join(', ')}` : '';
-      const erpPart = erpSelected ? 'ERP (incl. sonorisation, solarisation)' : '';
+      const erpPart = erpSelected ? 'ERP avec Nuisances Sonores Aériennes' : '';
       const designation = [packPart, erpPart].filter(Boolean).join(' · ');
 
       // Write to DOM safely — BACKGROUND/derived values take precedence
