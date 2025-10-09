@@ -78,9 +78,12 @@ state.prices = normalizePrices(state.diagnostics, state.prices);
 
 export function setState(next){
   const merged = { ...state, ...next };
+  const diagnostics = merged.diagnostics || state.diagnostics;
+  const prices = merged.prices || state.prices;
   state = {
     ...merged,
-    prices: normalizePrices(merged.diagnostics || state.diagnostics, merged.prices || state.prices)
+    diagnostics,
+    prices: normalizePrices(diagnostics, prices)
   };
   const persistable = { ...state, selectedDiagIds: [] };
   storage.setState(persistable);
