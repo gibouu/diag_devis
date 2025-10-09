@@ -12,7 +12,16 @@ export const PACKS = ['F1','F2','F3','F4','F5','F6+'];
 export const PURPOSES = ['rent','sale'];
 
 export const storage = {
-  getState() { try{ const raw = localStorage.getItem('diagnostics_pricer_state'); if(!raw) return null; return JSON.parse(raw);}catch{return null;} },
+  getState() {
+    try {
+      const raw = localStorage.getItem('diagnostics_pricer_state');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return { ...parsed, selectedDiagIds: [] };
+    } catch {
+      return null;
+    }
+  },
   setState(s){ localStorage.setItem('diagnostics_pricer_state', JSON.stringify(s)); }
 };
 
@@ -68,8 +77,13 @@ export let state = storage.getState() || {
 state.prices = normalizePrices(state.diagnostics, state.prices);
 
 export function setState(next){
-  state = { ...next, prices: normalizePrices(next.diagnostics || state.diagnostics, next.prices || state.prices) };
-  storage.setState(state);
+  const merged = { ...state, ...next };
+  state = {
+    ...merged,
+    prices: normalizePrices(merged.diagnostics || state.diagnostics, merged.prices || state.prices)
+  };
+  const persistable = { ...state, selectedDiagIds: [] };
+  storage.setState(persistable);
 }
 export function updateState(part){
   setState({ ...state, ...part });
