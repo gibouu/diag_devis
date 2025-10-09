@@ -75,18 +75,23 @@
             <label><input type="radio" name="inv_civ" value="Mme" /> Mme</label>
             <label><input type="radio" name="inv_civ" value="both" /> M. & Mme</label>
             <label><input type="radio" name="inv_civ" value="company" /> Société</label>
-            <label style="margin-left:8px;"><input type="checkbox" id="inv_no_first" /> Pas de prénom</label>
-          </div>
-
-          <div id="inv_name_row" style="margin-top:8px;">
-            <input id="inv_last" placeholder="Nom (obligatoire)" class="w-50" />
-            <input id="inv_first" placeholder="Prénom (si applicable)" class="w-50" />
-          </div>
-
-          <div id="inv_company_row" style="display:none;margin-top:8px;">
-            <input id="inv_company" placeholder="Nom de la société" class="w-100" />
           </div>
         </fieldset>
+
+        <!-- name / company inputs -->
+        <div id="inv_name_row" class="row" style="gap:8px; margin-top:8px;">
+          <label style="flex:1">Nom (obligatoire pour personne)
+            <input type="text" id="inv_last" class="w-100" placeholder="ex: DUPONT" />
+          </label>
+          <label style="flex:1">Prénom (optionnel)
+            <input type="text" id="inv_first" class="w-100" placeholder="ex: pierre" />
+          </label>
+        </div>
+        <div id="inv_company_row" style="display:none; margin-top:8px;">
+          <label class="w-100">Société
+            <input type="text" id="inv_company" class="w-100" placeholder="Nom de la société" />
+          </label>
+        </div>
         <div class="row" style="align-items:flex-end;">
           <label class="flex-1 dropdown">Search address (auto-fill)
             <input type="text" id="inv_search" class="w-100" placeholder="e.g., 10 Rue de Rivoli, Paris" autocomplete="off" />
@@ -132,8 +137,7 @@
       </div>
     </div>
   </div>
-  <script defer src="./assets/app.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script type="module" src="./assets/app.js"></script>
   
 </body>
 </html>
