@@ -36,11 +36,16 @@ export function validateInvoice(){
   const description = getVal('inv_description');
   const typeBien = getVal('inv_type_bien');
 
+  const hasFirst = first.length > 0;
+  const hasLast = last.length > 0;
+  const civAllowsLastOnly = (civ === 'M.' || civ === 'Mme');
+
   let hasName = false;
   if (civ === 'company') hasName = company.length > 0;
-  else if (civ === 'both' || civ === 'M_MME') hasName = last.length > 0;
-  else if (allowNoFirst) hasName = last.length > 0;
-  else hasName = (first.length > 0 && last.length > 0);
+  else if (civ === 'both' || civ === 'M_MME') hasName = hasLast;
+  else if (civAllowsLastOnly) hasName = hasLast;
+  else if (allowNoFirst) hasName = hasLast;
+  else hasName = (hasFirst && hasLast);
 
   const ok = hasName && num && street && postal && city && designation && description && typeBien;
   const btn = q('continueInvoice');
@@ -182,7 +187,7 @@ export function syncInvoiceFromSelections(){
 
     const nonERPNames = Array.isArray(packSummary.names) ? packSummary.names : [];
     const packPart = (packSummary.count > 0) ? `1 Pack ${nonERPNames.join(', ')}` : '';
-    const erpPart = erpSelected ? 'ERP (incl. sonorisation, solarisation)' : '';
+    const erpPart = erpSelected ? 'ERP avec Nuisances Sonores Aeriennes' : '';
     const designation = [packPart, erpPart].filter(Boolean).join(' · ');
 
     const desEl = q('inv_designation');

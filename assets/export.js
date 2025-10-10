@@ -29,12 +29,13 @@ export async function exportToExcelExcelJS(){
     const allowNoFirst = getChecked('inv_no_first');
     const lastUpper = upperSafe(last);
     const firstCap = capitalize(first);
+    const civAllowsLastOnly = (civChoice === 'M.' || civChoice === 'Mme');
     let fullName;
     if (civChoice === 'company') {
       fullName = upperSafe(company);
     } else if (civChoice === 'both' || civChoice === 'M_MME') {
       fullName = `M. et Mme ${lastUpper}`;
-    } else if (!firstCap && allowNoFirst) {
+    } else if (!firstCap && (allowNoFirst || civAllowsLastOnly)) {
       fullName = `${civChoice} ${lastUpper}`.trim();
     } else {
       fullName = `${civChoice} ${lastUpper} ${firstCap}`.trim();
@@ -56,6 +57,9 @@ export async function exportToExcelExcelJS(){
     const b9Pattern = `${dd}${mm}/${yyyy}`;
 
     const { area, total, packSummary, erpSelected } = calculateTotal();
+    const templateB30Value = ws.getCell('B30').value;
+    const hasAmiante = Array.isArray(packSummary?.names) && packSummary.names.some((name) => String(name).toUpperCase() === 'AMIANTE');
+    ws.getCell('B30').value = hasAmiante ? templateB30Value : null;
 
     let derivedTypeBien = typeBien;
     if (typeBien === 'APPARTEMENT') {
@@ -75,7 +79,7 @@ export async function exportToExcelExcelJS(){
 
     const nonERPNames = packSummary?.names || [];
     const packPart = (packSummary?.count > 0) ? `1 Pack ${nonERPNames.join(', ')}` : '';
-    const erpPart = erpSelected ? 'ERP (incl. sonorisation, solarisation)' : '';
+    const erpPart = erpSelected ? 'ERP avec Nuisances Sonores Aeriennes' : '';
     const longSentence = [packPart, erpPart].filter(Boolean).join(' · ');
 
     if (status) status.textContent = 'Filling cells…';

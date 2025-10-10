@@ -67,7 +67,7 @@ export function calculateTotal() {
       const erpBase = Number(state.prices?.['ERP']?.[pack]?.[purpose] ?? 40);
       const erpPrice = optAgent ? 0 : erpBase;
       total += erpPrice;
-      lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP (incl. sonorisation, solarisation)', pack, purpose, base: erpBase, factor: 1, price: erpPrice });
+      lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aeriennes', pack, purpose, base: erpBase, factor: 1, price: erpPrice });
     }
     return {
       area,
@@ -88,7 +88,7 @@ export function calculateTotal() {
       const erpBase = Number(state.prices?.['ERP']?.[pack]?.['sale'] ?? 40);
       const erpPrice = optAgent ? 0 : erpBase;
       total += erpPrice;
-      lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP (incl. sonorisation, solarisation)', pack, purpose: 'sale', base: erpBase, factor: 1, price: erpPrice });
+      lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aeriennes', pack, purpose: 'sale', base: erpBase, factor: 1, price: erpPrice });
     }
     return {
       area,
@@ -141,7 +141,7 @@ export function calculateTotal() {
     const erpBase = Number(state.prices?.['ERP']?.[pricePack]?.[purpose] ?? 40);
     const erpPrice = optAgent ? 0 : roundCurrency(erpBase * (area <= 100 ? 1 : factor));
     addonsSubtotal += erpPrice;
-    lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP (incl. sonorisation, solarisation)', pack, purpose, base: erpBase, factor: (area <= 100 ? 1 : factor), price: erpPrice });
+    lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aeriennes', pack, purpose, base: erpBase, factor: (area <= 100 ? 1 : factor), price: erpPrice });
   }
 
   const total = roundCurrency(diagnosticsSubtotal + addonsSubtotal);
