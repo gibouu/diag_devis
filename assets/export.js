@@ -86,7 +86,6 @@ export async function exportToExcelExcelJS(){
     ws.getCell('D10').value = `${postal} ${city}`;
     ws.getCell('E39').value = Number(total);
     ws.getCell('B21').value = designation;
-    ws.getCell('B25').value = displayType || description;
     ws.getCell('B26').value = `${num}, ${street}`;
     ws.getCell('B27').value = `${postal} ${city}`;
     ws.getCell('A21').value = displayType;
