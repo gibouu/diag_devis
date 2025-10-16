@@ -139,9 +139,10 @@ export function calculateTotal() {
   if (erpSelected) {
     const pricePack = area > 100 ? 'F5' : pack;
     const erpBase = Number(state.prices?.['ERP']?.[pricePack]?.[purpose] ?? 40);
-    const erpPrice = optAgent ? 0 : roundCurrency(erpBase * (area <= 100 ? 1 : factor));
+    // ERP is a flat add-on that should not scale with surface multipliers
+    const erpPrice = optAgent ? 0 : roundCurrency(erpBase);
     addonsSubtotal += erpPrice;
-    lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aeriennes', pack, purpose, base: erpBase, factor: (area <= 100 ? 1 : factor), price: erpPrice });
+    lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aeriennes', pack, purpose, base: erpBase, factor: 1, price: erpPrice });
   }
 
   const total = roundCurrency(diagnosticsSubtotal + addonsSubtotal);
