@@ -142,7 +142,14 @@ export function calculateTotal() {
     // ERP is a flat add-on that should not scale with surface multipliers
     const erpPrice = optAgent ? 0 : roundCurrency(erpBase);
     addonsSubtotal += erpPrice;
-    lines.push({ name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aeriennes', pack, purpose, base: erpBase, factor: 1, price: erpPrice });
+    lines.push({
+      name: optAgent ? 'ERP (agent - free)' : 'ERP avec Nuisances Sonores Aeriennes',
+      pack: pricePack,
+      purpose,
+      base: erpBase,
+      factor: 1,
+      price: erpPrice
+    });
   }
 
   const total = roundCurrency(diagnosticsSubtotal + addonsSubtotal);
