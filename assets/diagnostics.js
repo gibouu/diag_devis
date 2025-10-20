@@ -28,7 +28,7 @@ export function renderDiagnosticsList(){
     const isSelected = (state.selectedDiagIds || []).includes(diag.id);
     chip.className = isSelected ? 'btn' : 'btn secondary';
     chip.dataset.diagId = diag.id;
-    chip.textContent = diag.name + (disabled ? ' (sale only)' : '');
+    chip.textContent = diag.name + (disabled ? ' (vente uniquement)' : '');
     chip.disabled = disabled;
     chip.addEventListener('click', () => { toggleSelectedDiagnostic(diag.id); renderDiagnosticsList(); });
     list.appendChild(chip);

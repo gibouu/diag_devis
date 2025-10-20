@@ -78,7 +78,8 @@ export let state = storage.getState() || {
   diagnostics: DEFAULT_DIAGNOSTICS,
   prices: seedSpecDefaults(makeDefaultPrices(DEFAULT_DIAGNOSTICS)),
   selectedDiagIds: [],
-  propType: 'apartment'
+  propType: 'apartment',
+  scalingMethod: 'factor'
 };
 state.prices = normalizePrices(state.diagnostics, state.prices);
 

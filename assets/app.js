@@ -64,6 +64,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const scalingRadios = Array.from(document.querySelectorAll('input[name="scalingMethod"]'));
+  const scalingHint = H.q('scalingMethodHint');
+
+  const setScalingMethod = (value, options = {}) => {
+    const method = (value === 'philippe') ? 'philippe' : 'factor';
+    scalingRadios.forEach((radio) => {
+      radio.checked = (radio.value === method);
+    });
+    if (S.state.scalingMethod !== method) {
+      S.updateState({ scalingMethod: method });
+    }
+    if (!options.silent) {
+      const result = H.q('result'); if (result) result.innerHTML = '';
+      I.syncInvoiceFromSelections();
+    }
+  };
+
+  const refreshScalingMethodAvailability = () => {
+    const areaEl = H.q('area');
+    const areaVal = Math.max(0, Number(areaEl?.value || 0));
+    const jobType = [...document.querySelectorAll('input[name="jobType"]')].find(r => r.checked)?.value || 'normal';
+    const philippeRadio = scalingRadios.find(r => r.value === 'philippe');
+    const factorRadio = scalingRadios.find(r => r.value === 'factor');
+    const eligible = (jobType === 'normal' && areaVal > 100);
+    if (philippeRadio) {
+      philippeRadio.disabled = !eligible;
+      if (!eligible && S.state.scalingMethod === 'philippe') {
+        if (factorRadio) factorRadio.checked = true;
+        setScalingMethod('factor', { silent: true });
+      }
+    }
+    if (scalingHint) {
+      if (!eligible) scalingHint.textContent = 'Option disponible uniquement si la surface depasse 100 m² pour une prestation standard.';
+      else scalingHint.textContent = 'Choisissez la methode souhaitee pour les surfaces superieures a 100 m².';
+    }
+  };
+
   const areaInput = H.q('area');
   if (areaInput) {
     areaInput.addEventListener('input', () => {
@@ -72,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (derivedPackEl) derivedPackEl.textContent = C.getDisplayPackLabel(value);
       const result = H.q('result'); if (result) result.innerHTML = '';
       refreshStudetteAvailability();
+      refreshScalingMethodAvailability();
       I.syncInvoiceFromSelections();
     });
   }
@@ -90,7 +128,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('input[name="jobType"]').forEach((radio) => {
     radio.addEventListener('change', () => {
       const result = H.q('result'); if (result) result.innerHTML = '';
+      refreshScalingMethodAvailability();
       I.syncInvoiceFromSelections();
+    });
+  });
+
+  scalingRadios.forEach((radio) => {
+    radio.addEventListener('change', () => {
+      if (!radio.checked) return;
+      if (radio.disabled) return;
+      setScalingMethod(radio.value);
     });
   });
 
@@ -113,6 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   refreshStudetteAvailability();
+  refreshScalingMethodAvailability();
+  setScalingMethod(S.state.scalingMethod || 'factor', { silent: true });
   I.syncInvoiceFromSelections();
 
   const resetWizard = () => {
@@ -130,6 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const studette = H.q('opt_studette'); if (studette) { studette.checked = false; studette.disabled = false; }
     const agent = H.q('opt_agent'); if (agent) agent.checked = false;
+    setScalingMethod('factor');
+    refreshScalingMethodAvailability();
 
     if (areaInput) {
       areaInput.value = areaInput.defaultValue || '60';
@@ -197,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const result = H.q('result');
     if (hasError) {
-      if (result) result.innerHTML = `<p class="error-text">Please fill in the highlighted fields.</p>`;
+      if (result) result.innerHTML = `<p class="error-text">Merci de completer les champs mis en evidence.</p>`;
       return;
     }
     C.renderResult();

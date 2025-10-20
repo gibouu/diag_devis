@@ -60,7 +60,7 @@ function sanitizeStreetName(str){
 
 export async function geocodeAddress(query){
   const status = q('addr_status');
-  if (status) setStatusText(status, 'Recherche…');
+  if (status) setStatusText(status, 'Recherche...');
   try {
     const url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=1`;
     const resp = await fetch(url, { headers: { Accept: 'application/json' } });
@@ -68,7 +68,7 @@ export async function geocodeAddress(query){
     const data = await resp.json();
     const features = Array.isArray(data?.features) ? data.features : [];
     if (!features.length) {
-      if (status) setStatusText(status, 'Aucun résultat');
+      if (status) setStatusText(status, 'Aucun resultat');
       return null;
     }
     const best = features[0];
@@ -111,7 +111,7 @@ export async function onLookupAddress(){
   const query = getVal('inv_search');
   const status = q('addr_status');
   if (!query) {
-    if (status) setStatusText(status, 'Enter an address to search');
+    if (status) setStatusText(status, 'Saisissez une adresse a rechercher');
     return;
   }
   const data = await geocodeAddress(query);
@@ -120,7 +120,7 @@ export async function onLookupAddress(){
   const streetEl = q('inv_street'); if (streetEl) streetEl.value = sanitizeStreetName(data.street || '');
   const postalEl = q('inv_postal'); if (postalEl) postalEl.value = data.postal || '';
   const cityEl = q('inv_city'); if (cityEl) cityEl.value = data.city || '';
-  if (status) setStatusText(status, 'Address filled');
+  if (status) setStatusText(status, 'Adresse importee');
   validateInvoice();
 }
 
@@ -187,7 +187,7 @@ export function syncInvoiceFromSelections(){
 
     const nonERPNames = Array.isArray(packSummary.names) ? packSummary.names : [];
     const packPart = (packSummary.count > 0) ? `1 Pack ${nonERPNames.join(', ')}` : '';
-    const erpPart = erpSelected ? 'ERP avec Nuisances Sonores Aeriennes' : '';
+    const erpPart = erpSelected ? 'ERP avec nuisances sonores aeriennes' : '';
     const designation = [packPart, erpPart].filter(Boolean).join(' · ');
 
     const desEl = q('inv_designation');
@@ -252,19 +252,19 @@ export function setupContinueHandler(){
     btn.addEventListener('click', async () => {
       const status = q('inv_status');
       if (!validateInvoice()) {
-        if (status) setStatusText(status, 'Please complete the required invoice fields.');
+        if (status) setStatusText(status, 'Merci de completer les champs requis pour le devis.');
         setTimeout(() => { if (status) setStatusText(status, ''); }, 4000);
         return;
       }
-      if (status) setStatusText(status, 'Generating…');
+      if (status) setStatusText(status, 'Generation en cours...');
       btn.disabled = true;
       try {
         await exportToExcelExcelJS();
-        if (status) setStatusText(status, 'Done. Check your downloads.');
+        if (status) setStatusText(status, 'Termine. Verifiez vos telechargements.');
         togglePostExportActions(true);
       } catch (error) {
         console.error(error);
-        if (status) setStatusText(status, 'Failed to generate.');
+        if (status) setStatusText(status, 'Echec de la generation.');
       } finally {
         btn.disabled = false;
         setTimeout(() => { if (status) setStatusText(status, ''); }, 4000);

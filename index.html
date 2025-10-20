@@ -1,75 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Diagnostics Price Calculator</title>
+  <title>Calculateur de prix des diagnostics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-  <h1>Diagnostics Price Calculator</h1>
-  <p class="muted small">Baseline prices are for 0–100 m². For area > 100 m², individual prices scale by (area / 100).</p>
+  <h1>Calculateur de prix des diagnostics</h1>
+  <p class="muted small">Les tarifs de base couvrent 0 à 100 m². Au-delà, choisissez la méthode d'ajustement souhaitée pour les diagnostics.</p>
 
   <div class="stack" id="flowRoot">
     <div class="card" id="stepArea">
-      <h2>Step 1 · Surface area</h2>
-      <div class="row" style="justify-content: space-between;">
+      <h2>Étape 1 · Surface</h2>
+      <div class="row" style="justify-content: space-between; gap:16px; flex-wrap:wrap;">
         <fieldset>
-          <legend>Service type</legend>
-          <label><input type="radio" name="jobType" value="normal" checked /> Normal</label>
-          <label style="margin-left:16px;"><input type="radio" name="jobType" value="parking" /> Parking only</label>
-          <label style="margin-left:16px;"><input type="radio" name="jobType" value="cave" /> Cave only</label>
+          <legend>Type de prestation</legend>
+          <label><input type="radio" name="jobType" value="normal" checked /> Standard</label>
+          <label style="margin-left:16px;"><input type="radio" name="jobType" value="parking" /> Parking uniquement</label>
+          <label style="margin-left:16px;"><input type="radio" name="jobType" value="cave" /> Cave uniquement</label>
         </fieldset>
-        <label>Surface area (m²)
+        <label>Surface (m²)
           <input type="number" id="area" min="1" step="1" value="60" />
         </label>
         <div class="row" style="align-items:center; gap:8px;">
-          <span class="muted small">Derived pack</span>
+          <span class="muted small">Pack suggéré</span>
           <span class="pill" id="derivedPack">F3</span>
         </div>
-        <button class="btn" id="nextToType">Next</button>
+        <fieldset id="scalingMethodGroup" style="min-width:220px;">
+          <legend>Ajustement &gt; 100 m²</legend>
+          <label><input type="radio" name="scalingMethod" value="factor" checked /> Multiplicateur classique</label>
+          <label><input type="radio" name="scalingMethod" value="philippe" /> Méthode Philippe</label>
+          <p class="muted small" id="scalingMethodHint">Option disponible uniquement si la surface dépasse 100 m².</p>
+        </fieldset>
+        <button class="btn" id="nextToType">Suivant</button>
       </div>
     </div>
 
     <div class="card" id="stepType" style="display:none;">
-      <h2>Step 2 · Property type</h2>
+      <h2>Étape 2 · Type de bien</h2>
       <div class="row" style="gap:16px; align-items:center;">
-        <label><input type="radio" name="propType" value="apartment" checked /> Apartment</label>
-        <label><input type="radio" name="propType" value="house" /> House / Pavilion</label>
+        <label><input type="radio" name="propType" value="apartment" checked /> Appartement</label>
+        <label><input type="radio" name="propType" value="house" /> Maison / Pavillon</label>
         <label><input type="checkbox" id="opt_studette" /> Studette</label>
-        <button class="btn" id="nextToPurpose">Next</button>
+        <button class="btn" id="nextToPurpose">Suivant</button>
       </div>
         </div>
 
     <div class="card" id="stepPurpose" style="display:none;">
-      <h2>Step 3 · Purpose</h2>
+      <h2>Étape 3 · Objet</h2>
       <div class="row" style="gap:16px; align-items:center;">
-        <label><input type="radio" name="purpose" value="rent" checked /> Renting</label>
-        <label><input type="radio" name="purpose" value="sale" /> Sale</label>
-        <label><input type="checkbox" id="opt_agent" /> Agent brings commission (ERP free)</label>
-        <button class="btn" id="nextToDiags">Next</button>
+        <label><input type="radio" name="purpose" value="rent" checked /> Location</label>
+        <label><input type="radio" name="purpose" value="sale" /> Vente</label>
+        <label><input type="checkbox" id="opt_agent" /> Mandataire (ERP offert)</label>
+        <button class="btn" id="nextToDiags">Suivant</button>
       </div>
     </div>
 
     <div class="card" id="stepDiags" style="display:none;">
-      <h2>Step 4 · Diagnostics</h2>
-      <p class="muted small">Click to select. TERMITES is only for sale.</p>
+      <h2>Étape 4 · Diagnostics</h2>
+      <p class="muted small">Cliquez pour sélectionner. TERMITES uniquement pour la vente.</p>
       <div id="diagnosticsList" class="row" style="flex-wrap:wrap; gap:8px;"></div>
     </div>
 
     <div class="card" id="resultCard" style="display:none;">
       <div class="row" style="justify-content: space-between; align-items: center;">
-        <h2 style="margin:0;">Result</h2>
-        <button id="calc" class="btn">Calculate</button>
+        <h2 style="margin:0;">Résultat</h2>
+        <button id="calc" class="btn">Calculer</button>
       </div>
       <div id="result"></div>
     </div>
     <div class="card" id="stepInvoice" style="display:none;">
-      <h2>Step 5 · Invoice details</h2>
+      <h2>Étape 5 · Facturation</h2>
       <div class="stack">
         <!-- duplicate name fields removed; keep the civility/name/company block below -->
         <fieldset>
-          <legend>Civility / Company</legend>
+          <legend>Civilité / Société</legend>
           <div class="row" style="gap:16px; align-items:center;">
             <label><input type="radio" name="inv_civ" value="M." checked /> M.</label>
             <label><input type="radio" name="inv_civ" value="Mme" /> Mme</label>
@@ -93,22 +99,22 @@
           </label>
         </div>
         <div class="row" style="align-items:flex-end;">
-          <label class="flex-1 dropdown">Search address (auto-fill)
-            <input type="text" id="inv_search" class="w-100" placeholder="e.g., 10 Rue de Rivoli, Paris" autocomplete="off" />
+          <label class="flex-1 dropdown">Recherche d'adresse (auto-remplissage)
+            <input type="text" id="inv_search" class="w-100" placeholder="ex : 10 rue de Rivoli, Paris" autocomplete="off" />
             <div id="addr_suggestions" class="dropdown-menu" style="display:none;"></div>
           </label>
           <span id="addr_status" class="small muted" style="margin-left:8px;"></span>
         </div>
-        <label class="w-100">Street number
+        <label class="w-100">Numéro de voie
           <input type="text" id="inv_num" class="w-100" />
         </label>
-        <label class="w-100">Street name
+        <label class="w-100">Nom de rue
           <input type="text" id="inv_street" class="w-100" />
         </label>
-        <label class="w-100">Postal code
+        <label class="w-100">Code postal
           <input type="text" id="inv_postal" class="w-100" />
         </label>
-        <label class="w-100">City
+        <label class="w-100">Ville
           <input type="text" id="inv_city" class="w-100" />
         </label>
         <label class="w-100">Désignation des diagnostics (B21)
@@ -128,10 +134,10 @@
         </label>
         <div class="row" style="justify-content: center; align-items:center; gap:12px;">
           <span id="inv_status" class="small muted"></span>
-          <button id="continueInvoice" class="btn">Create invoice</button>
+          <button id="continueInvoice" class="btn">Créer le devis</button>
         </div>
         <div class="row" id="postExportActions" style="justify-content:center; margin-top:16px; display:none;">
-          <button id="newInvoice" class="btn secondary">Create a new invoice</button>
+          <button id="newInvoice" class="btn secondary">Nouveau devis</button>
         </div>
       </div>
     </div>

@@ -9,18 +9,18 @@ function capitalize(str){
 
 export async function exportToExcelExcelJS(){
   const status = q('inv_status');
-  if (status) status.textContent = 'Loading template…';
+  if (status) status.textContent = 'Chargement du modele...';
   try {
     const resp = await fetch('./assets/DEVIS.xlsx');
-    if (!resp.ok) throw new Error(`Template not found (HTTP ${resp.status})`);
+    if (!resp.ok) throw new Error(`Modele introuvable (HTTP ${resp.status})`);
     const ab = await resp.arrayBuffer();
 
-    if (status) status.textContent = 'Preparing workbook…';
-    if (typeof ExcelJS === 'undefined') throw new Error('ExcelJS not loaded');
+    if (status) status.textContent = 'Preparation du classeur...';
+    if (typeof ExcelJS === 'undefined') throw new Error('ExcelJS non charge');
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(ab);
     const ws = wb.worksheets[0];
-    if (!ws) throw new Error('No worksheet in template');
+    if (!ws) throw new Error('Aucune feuille dans le modele');
 
     const civChoice = [...document.querySelectorAll('input[name="inv_civ"]')].find(x => x.checked)?.value || 'M.';
     const company = getVal('inv_company');
@@ -79,10 +79,10 @@ export async function exportToExcelExcelJS(){
 
     const nonERPNames = packSummary?.names || [];
     const packPart = (packSummary?.count > 0) ? `1 Pack ${nonERPNames.join(', ')}` : '';
-    const erpPart = erpSelected ? 'ERP avec Nuisances Sonores Aeriennes' : '';
+    const erpPart = erpSelected ? 'ERP avec nuisances sonores aeriennes' : '';
     const longSentence = [packPart, erpPart].filter(Boolean).join(' · ');
 
-    if (status) status.textContent = 'Filling cells…';
+    if (status) status.textContent = 'Remplissage en cours...';
     ws.getCell('B12').value = todayStr;
     ws.getCell('B9').value = b9Pattern;
     ws.getCell('D8').value = fullName;
@@ -94,7 +94,7 @@ export async function exportToExcelExcelJS(){
     ws.getCell('B27').value = `${postal} ${city}`;
     ws.getCell('A21').value = displayType;
 
-    if (status) status.textContent = 'Creating file…';
+    if (status) status.textContent = 'Creation du fichier...';
     const buffer = await wb.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
@@ -107,7 +107,7 @@ export async function exportToExcelExcelJS(){
     setTimeout(() => URL.revokeObjectURL(url), 0);
   } catch (error) {
     console.error('[exportToExcelExcelJS] failed', error);
-    if (status) status.textContent = `Failed: ${error.message}`;
+    if (status) status.textContent = `Echec : ${error.message}`;
     throw error;
   }
 }
