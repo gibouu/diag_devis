@@ -11,18 +11,24 @@ export const DEFAULT_DIAGNOSTICS = [
 export const PACKS = ['F1','F2','F3','F4','F5','F6+'];
 export const PURPOSES = ['rent','sale'];
 
+const STORAGE_KEY = 'diagnostics_pricer_state';
+
+function clearPersistedState(){
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore storage access issues (e.g. private mode)
+  }
+}
+
 export const storage = {
   getState() {
-    try {
-      const raw = localStorage.getItem('diagnostics_pricer_state');
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return { ...parsed, selectedDiagIds: [] };
-    } catch {
-      return null;
-    }
+    clearPersistedState();
+    return null;
   },
-  setState(s){ localStorage.setItem('diagnostics_pricer_state', JSON.stringify(s)); }
+  setState(){
+    clearPersistedState();
+  }
 };
 
 export function makeDefaultPrices(diags = DEFAULT_DIAGNOSTICS){
